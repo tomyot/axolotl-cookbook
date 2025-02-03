@@ -17,8 +17,8 @@ grpo_vllm_gpu_memory_utilization: 0.7
 
 chat_template: qwen_25
 datasets:
-  - path: AI-MO/NuminaMath-TIR
-    type: r1_grpo.data_transform
+  - path: skrishna/gsm8k_only_answer
+    type: r1.gsm8k_transform
 dataset_prepared_path: /workspace/data/last_run_prepared
 dataset_processes:
 skip_prepare_dataset: true

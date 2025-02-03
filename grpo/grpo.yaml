@@ -1,0 +1,76 @@
+base_model: Qwen/Qwen2.5-3B
+# Automatically upload checkpoint and final model to HF
+# hub_model_id: username/custom_model_name
+
+load_in_8bit: false
+load_in_4bit: false
+strict: false
+
+# torch_compile: true
+
+rl: grpo
+grpo_use_vllm: true
+grpo_reward_funcs:
+  - r1.accuracy_reward
+  - r1.format_reward
+grpo_vllm_gpu_memory_utilization: 0.7
+
+chat_template: qwen_25
+datasets:
+  - path: AI-MO/NuminaMath-TIR
+    type: r1_grpo.data_transform
+dataset_prepared_path: /workspace/data/last_run_prepared
+dataset_processes:
+skip_prepare_dataset: true
+val_set_size: 0.0
+output_dir: /workspace/artifacts/grpo-3b
+
+gc_steps: 1
+
+sequence_len: 2048
+sample_packing: false
+eval_sample_packing: false
+pad_to_sequence_len: false
+
+wandb_project: grpo
+wandb_entity: axolotl-ai
+wandb_watch:
+wandb_name:
+wandb_log_model:
+
+gradient_accumulation_steps: 8
+micro_batch_size: 1
+num_epochs: 1
+optimizer: adamw_torch_fused
+lr_scheduler: cosine
+learning_rate: 0.0002
+max_grad_norm: 1.0
+
+train_on_inputs: false
+group_by_length: false
+bf16: auto
+fp16:
+tf32: false
+
+gradient_checkpointing: true
+gradient_checkpointing_kwargs:
+  use_reentrant: false
+early_stopping_patience:
+resume_from_checkpoint:
+local_rank:
+logging_steps: 1
+xformers_attention:
+flash_attention: true
+
+loss_watchdog_threshold: 5.0
+loss_watchdog_patience: 3
+
+warmup_steps: 10
+evals_per_epoch: 1
+saves_per_epoch: 4
+debug:
+deepspeed: deepspeed_configs/zero1.json
+weight_decay: 0.0
+fsdp:
+fsdp_config:
+special_tokens:

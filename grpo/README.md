@@ -59,6 +59,7 @@ You can find the training metrics here: https://wandb.ai/axolotl-ai/gsm8k-grpo-r
 
 ![wandb.png](assets/wandb.png)
 
+The training takes about 6 hours to complete at a commodity GPU cost of ~\$12-\$24 depending on your compute provider.
 We can see from the metrics that the model quickly learns the loose formatting reward, but doesn't quite nail down the
 strict formatting with newlines. The correctness reward hangs out at around ~1.4 which is about 70% accuracy as the max
 reward for correctness is 2.0.
@@ -95,3 +96,27 @@ we need to set the `num-processes` to `N - 1` GPUs.
 ```bash
 axolotl train --num-processes=1 gsm8k.yaml --cloud cloud.yaml
 ```
+
+### Single GPU
+
+To train on a single L40S GPU, we can do a few things like decrease the number of generations and reduce the vLLM 
+footprint on the remainder of the VRAM. In this configuration, training still takes ~6 hours at a commodity
+cost of \$6-$12.
+
+```yaml
+trl:
+  vllm_device: "cuda:0"  # force vllm to the only GPU instead of the "next GPU"
+  vllm_gpu_memory_utilization: 0.2  # reduce the footprint of vllm to use ~9GB VRAM
+  num_generations: 8
+
+micro_batch_size: 8  # decrease the per gpu batch size to match the number of generations per prompt 
+```
+
+If you're using Modal to launch your post-training, you'll want to update the `cloud.yaml` appropriately as well.
+
+```yaml
+gpu_count: 1
+```
+
+You can find the results of our experiment with single GPU post-training here: 
+https://wandb.ai/axolotl-ai/gsm8k-grpo-r1/runs/w3gpyhj2

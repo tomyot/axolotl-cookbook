@@ -1,0 +1,29 @@
+project_name:
+volumes:
+  - name: axolotl-data
+    mount: /workspace/data
+  - name: axolotl-artifacts
+    mount: /workspace/artifacts
+
+# environment variables from local to set as secrets
+secrets:
+  - HF_TOKEN
+  - WANDB_API_KEY
+
+# Which branch of axolotl to use remotely
+branch: grpo
+spawn:
+dockerfile_commands:
+  - 'RUN pip install "vllm==0.7.2"'
+  - 'RUN pip uninstall -y trl && pip install --no-deps "trl @ git+https://github.com/huggingface/trl.git@main"'
+
+gpu: L40S
+gpu_count: 2
+
+# Train specific configurations
+memory: 128
+timeout: 86400
+
+# Preprocess specific configurations
+memory_preprocess: 32
+timeout_preprocess: 14400

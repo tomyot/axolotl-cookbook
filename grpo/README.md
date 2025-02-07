@@ -53,7 +53,15 @@ hyperparameters in `gsm8k.yaml`. To train the model, we simply need to execute:
 axolotl train --num-processes=1 gsm8k.yaml
 ```
 
+## Results
+
 You can find the training metrics here: https://wandb.ai/axolotl-ai/gsm8k-grpo-r1
+
+![wandb.png](assets/wandb.png)
+
+We can see from the metrics that the model quickly learns the loose formatting reward, but doesn't quite nail down the
+strict formatting with newlines. The correctness reward hangs out at around ~1.4 which is about 70% accuracy as the max
+reward for correctness is 2.0.
 
 ## Training with Modal
 
@@ -85,7 +93,3 @@ we need to set the `num-processes` to `N - 1` GPUs.
 ```bash
 axolotl train --num-processes=1 gsm8k.yaml --cloud cloud.yaml
 ```
-
-### Results
-
-![wandb.png](assets/wandb.png)

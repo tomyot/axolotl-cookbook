@@ -41,10 +41,10 @@ With Qwen 1.5B, you'll need 2 GPUs. One for training and the other for inference
 in order to fit both the trainer and vLLM models on the same GPU, we opted to stick with 16x rollouts similar to the 
 original paper.
 
+## Training
+
 For inference TRL loads vLLM onto the last GPU, so when we start the trainer, we need to tell accelerate to use `N - 1`
 GPUs or processes for training, e.g. `--num-processes=1` in our case.
-
-## Training
 
 Putting it all together we have the `gsm8k_grpo.py` module providing the reward functions, and we've configured the 
 hyperparameters in `gsm8k.yaml`. To train the model, we simply need to execute:
@@ -68,7 +68,7 @@ first install the `modal` and `axolotl` CLIs locally with:
 
 ```bash
 pip install modal
-pip install "axolotl @ git+https://github.com/axolotl-ai-cloud/axolotl.git@main"
+pip install "axolotl @ git+https://github.com/axolotl-ai-cloud/axolotl.git@grpo"
 ```
 
 You can then authenticate to Modal with:

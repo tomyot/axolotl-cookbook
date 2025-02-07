@@ -65,7 +65,9 @@ reward for correctness is 2.0.
 
 ## Training with Modal
 
-Modal is ... # FIXME
+But what if you don't have two GPUs with 48GB of memory sitting around ready to run GRPO training?
+
+`axolotl` makes it easy to run training jobs on GPUs in the cloud via the [`--cloud` flag](https://axolotl-ai-cloud.github.io/axolotl/docs/cli.html#remote-compute-with-modal-cloud). Using the [Modal](https://modal.com) serverless platform, this flag will handle the entire process of cloud deployment (and tear-down) for your training run, according to a provided [`cloud.yaml` file](https://axolotl-ai-cloud.github.io/axolotl/docs/cli.html#cloud-configuration-options). The GPUs will be automatically deallocated when training finishes and you will only be charged for the time your code spends running on GPUs. See [Modal's pricing page](https://modal.com/pricing) for rates.
 
 If you have a Modal account, you can go straight to installing the CLI tools. Otherwise, you will need to [sign-up
 for Modal](https://www.modal.com?utm_source=github&utm_medium=github&utm_campaign=axolotl). Modal provides $30 each

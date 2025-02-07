@@ -8,9 +8,9 @@ the GRPO technique.
 To get started you'll need to install vllm==0.7.2 and both trl and axolotl from source as GRPO support is still in flux.
 
 ```bash
-pip install --no-build-isolation "axolotl @ git+https://github.com/axolotl-ai-ci/axolotl.git@grpo"
+pip install --no-build-isolation "axolotl[vllm] @ git+https://github.com/axolotl-ai-cloud/axolotl.git@grpo"
+pip uninstall trl
 pip install --no-deps "trl @ git+https://github.com/huggingface/trl.git@main"
-pip install vllm==0.7.2
 ```
 
 ## Knowing your dataset
@@ -68,7 +68,7 @@ first install the `modal` and `axolotl` CLIs locally with:
 
 ```bash
 pip install modal
-pip install "axolotl @ git+https://github.com/axolotl-ai-co/axolotl.git@main"
+pip install "axolotl @ git+https://github.com/axolotl-ai-cloud/axolotl.git@main"
 ```
 
 You can then authenticate to Modal with:

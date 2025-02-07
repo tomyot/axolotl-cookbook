@@ -1,4 +1,4 @@
-base_model: Qwen/Qwen2.5-3B
+base_model: Qwen/Qwen2.5-1.5B-Instruct
 # Automatically upload checkpoint and final model to HF
 # hub_model_id: username/custom_model_name
 
@@ -9,70 +9,63 @@ strict: false
 torch_compile: true
 
 rl: grpo
-rl_beta: 0.001
-grpo_use_vllm: true
-grpo_reward_funcs:
-  - r1_grpo.correct_answer_reward
-  - r1_grpo.format_reward
-grpo_vllm_gpu_memory_utilization: 0.7
-grpo_num_generations: 8
+trl:
+  beta: 0.001
+  max_completion_length: 512
+  use_vllm: true
+  reward_funcs:
+    - gsm8k_grpo.correctness_reward_func
+    - gsm8k_grpo.int_reward_func
+    - gsm8k_grpo.strict_format_reward_func
+    - gsm8k_grpo.soft_format_reward_func
+    - gsm8k_grpo.xmlcount_reward_func
+  vllm_gpu_memory_utilization: 0.9
+  vllm_max_model_len: 800
+  num_generations: 16
 
 chat_template: qwen_25
 datasets:
   - path: skrishna/gsm8k_only_answer
-    type: r1_grpo.gsm8k_transform
+    type: gsm8k_grpo.axo_gsm8k_transform
 dataset_prepared_path: /workspace/data/last_run_prepared
-dataset_processes:
 skip_prepare_dataset: true
 val_set_size: 0.0
-output_dir: /workspace/artifacts/r1-outputs
+output_dir: /workspace/data/axolotl-artifacts/r1-outputs
 
 dataloader_prefetch_factor: 32
 dataloader_num_workers: 2
 dataloader_pin_memory: true
 
 gc_steps: 1
-sequence_len: 4096
+
+sequence_len: 800
 sample_packing: false
 eval_sample_packing: false
 pad_to_sequence_len: false
 
-wandb_project: grpo-gsm8k-demo
+wandb_project: gsm8k-grpo-r1
 wandb_entity:
-wandb_watch:
 wandb_name:
-wandb_log_model:
 
-gradient_accumulation_steps: 2
-micro_batch_size: 4
+gradient_accumulation_steps: 8
+micro_batch_size: 16  # should match num_generations / num_gpus
 num_epochs: 1
+
 optimizer: adamw_torch_fused
 lr_scheduler: constant_with_warmup
 learning_rate: 1.0e-6
 max_grad_norm: 1.0
+weight_decay: 0.1
 
-train_on_inputs: false
-group_by_length: false
-bf16: auto
-fp16:
+bf16: true
 tf32: true
 
 gradient_checkpointing: true
 gradient_checkpointing_kwargs:
   use_reentrant: false
-early_stopping_patience:
-resume_from_checkpoint:
-local_rank:
-logging_steps: 1
-xformers_attention:
 flash_attention: true
 
+logging_steps: 1
 warmup_steps: 100
 evals_per_epoch: 1
 saves_per_epoch: 4
-debug:
-deepspeed:
-weight_decay: 0.0
-fsdp:
-fsdp_config:
-special_tokens:

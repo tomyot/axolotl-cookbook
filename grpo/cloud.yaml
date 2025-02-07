@@ -14,10 +14,10 @@ secrets:
 branch: grpo
 spawn:
 dockerfile_commands:
-  - 'RUN pip uninstall trl && pip install --no-deps "trl @ git+https://github.com/winglian/trl.git@axolotl-x-trl"'
-  - 'RUN pip install math-verify'
+  - 'RUN pip install "vllm==0.7.2"'
+  - 'RUN pip uninstall -y trl && pip install --no-deps "trl @ git+https://github.com/huggingface/trl.git@main"'
 
-gpu: H100
+gpu: L40S
 gpu_count: 2
 
 # Train specific configurations

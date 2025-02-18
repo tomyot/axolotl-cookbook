@@ -1,11 +1,11 @@
 # Process Reward Modelling with axolotl
 
-This cookbook accompanies our [Training Process Reward Models in axolotl](<blogpost_link) blog-post, and provides details on reproducing the evaluation results for [axolotl-ai-co/Qwen2.5-Math-PRM-7B](https://huggingface.co/axolotl-ai-co/Qwen2.5-Math-PRM-7B) model - an open-source PRM with competitive performance.
+This cookbook accompanies our [Training Process Reward Models in axolotl](<blogpost_link) blog-post, and provides details on reproducing the evaluation results for [axolotl-ai-co/Qwen2.5-Math-PRM-7B](https://huggingface.co/axolotl-ai-co/Qwen2.5-Math-PRM-7B)/
 
 ### ProcessBench
 
 ```bash
-torchrun --nproc_per_node=4 eval_process_bench.py --model <model_path> -b 24 -w 4 -s "\n"
+torchrun --nproc_per_node=4 eval_process_bench.py --model axolotl-ai-co/Qwen2.5-Math-PRM-7B -b 24 -w 4 -s "\n"
 
 GSM8K:
 err   corr   F1
@@ -25,9 +25,9 @@ err   corr   F1
 Omni-MATH:  
 err   corr   F1
 ----- ------ ----
-30.2   62.7  40.7
+24.6   87.1  38.3
 
-Average F1 across datasets: 47.8
+Average F1 across datasets: 55.0
 ```
 
 ### Best of N

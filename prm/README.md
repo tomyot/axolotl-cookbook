@@ -5,7 +5,7 @@ This cookbook accompanies our [Training Process Reward Models in axolotl](<blogp
 ### ProcessBench
 
 ```bash
-torchrun --nproc_per_node=4 eval_process_bench.py --model axolotl-ai-co/Qwen2.5-Math-PRM-7B -b 24 -w 4 -s "\n"
+torchrun --nproc_per_node=4 eval_process_bench.py --model axolotl-ai-co/Qwen2.5-Math-PRM-7B -b 24 -w 4 -s "\n\n"
 
 GSM8K:
 err   corr   F1

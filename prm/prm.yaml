@@ -1,10 +1,7 @@
 base_model: Qwen/Qwen2.5-Math-7B-Instruct
-# optionally might have model_type or tokenizer_type
 model_type: AutoModelForTokenClassification
 num_labels: 2
 tokenizer_type: AutoTokenizer
-# Automatically upload checkpoint and final model to HF
-# hub_model_id: username/custom_model_name
 
 load_in_8bit: false
 load_in_4bit: false
@@ -61,9 +58,7 @@ group_by_length: false
 bf16: auto
 fp16:
 tf32: true
-gradient_checkpointing: true
-gradient_checkpointing_kwargs:
-  use_reentrant: false
+
 early_stopping_patience:
 resume_from_checkpoint:
 local_rank:

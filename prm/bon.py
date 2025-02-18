@@ -1,17 +1,5 @@
-#!/usr/bin/env python
-# Copyright 2024 The HuggingFace Inc. team. All rights reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# credit to the HF team
+# https://github.com/huggingface/search-and-learn/blob/main/src/sal/search/best_of_n.py
 import argparse
 import math
 import os
@@ -20,12 +8,8 @@ from math import perm
 
 import numpy as np
 import torch
-from accelerate import Accelerator
 from transformers import AutoModelForTokenClassification, AutoTokenizer
 
-# from sal.config import Config
-# from sal.models.reward_models import PRM
-# from sal.utils.score import aggregate_scores
 from vllm import LLM, SamplingParams
 from vllm.distributed.parallel_state import (
     destroy_distributed_environment,
@@ -185,7 +169,7 @@ def score(
         )
         score_idxs.append([])
         for response in responses:
-            steps = response.split("\n")
+            steps = response.split("\n\n")
             score_idxs[-1].append([])
             for step in steps:
                 step_ids = tokenizer.encode(
@@ -214,29 +198,7 @@ def score(
         probs = torch.softmax(logits, dim=-1)[:, :, 1]  # Shape: [batch, seq_len]
 
     output_scores = []
-    import pdb
 
-    pdb.set_trace()
-    # for i, score_idx in enumerate(score_idxs):
-    # output_scores.append(logits[i, score_idx]])
-
-    # # TODO: tokenize each batch independently so there is less padding and faster inference
-    # output_scores = batched_math_shepherd_inference(
-    #     self.model,
-    #     self.tokenizer,
-    #     inputs_for_prm,
-    #     self.search_config.prm_batch_size,
-    # )
-    # cumulative_lengths = list(accumulate(lengths))
-    # # reshape the output scores to match the input
-    # output_scores = [
-    #     output_scores[i:j]
-    #     for i, j in zip([0] + cumulative_lengths[:-1], cumulative_lengths)
-    # ]
-
-    # # stripped_output_scores = [] TODO: strip out the reward for previous steps
-    # for output_score, output in zip(output_scores, outputs):
-    #     assert len(output_score) == len(output), f"{len(output_score)} != {len(output)}"
     current_idx = 0
     for question_scores in score_idxs:
         num_completions = len(question_scores)
@@ -249,7 +211,6 @@ def score(
             current_idx += 1
         output_scores.append(question_output)
 
-    pdb.set_trace()
     return output_scores
 
 
@@ -265,21 +226,34 @@ def aggregate_scores(scores: list[float], agg_strategy) -> float:
 
 
 def main(args):
-    # llm = LLM(
-    #     model=args.base_model,
-    #     enable_prefix_caching=True,
-    #     seed=42,
-    #     tensor_parallel_size=args.num_gpus,
-    # )
-    # tokenizer = llm.get_tokenizer()
+    llm = LLM(
+        model=args.base_model,
+        enable_prefix_caching=True,
+        seed=42,
+        tensor_parallel_size=args.num_gpus,
+    )
+    tokenizer = llm.get_tokenizer()
 
-    # generate some dummy data
+    # example problems from the MATH-5O0 dataset https://huggingface.co/datasets/HuggingFaceH4/MATH-500
     x = {
         "problem": [
-            "What is the sum of 1 and 2?",
-            "What is the product of 3 and 4?",
+            "What is the least positive integer multiple of 30 that can be written with only the digits 0 and 2?",
+            
+            "Define \\[p = \\sum_{k = 1}^\\infty \\frac{1}{k^2} \\quad \\text{and} \\quad "
+            "q = \\sum_{k = 1}^\\infty \\frac{1}{k^3}.\\]"
+            "Find a way to write \\[\\sum_{j = 1}^\\infty \\sum_{k = 1}^\\infty "
+            "\\frac{1}{(j + k)^3}\\] in terms of $p$ and $q.$",
+            
+            "What is the smallest positive perfect cube that can be written as the "
+            "sum of three consecutive integers?"
         ]
     }
+
+    answers = [
+        "2220",
+        "p - q",
+        "27"
+    ]
 
     convs = [
         [
@@ -288,18 +262,17 @@ def main(args):
         ]
         for prompt in x["problem"]
     ]
-    # tokenizer.chat_template = CUSTOM_CHAT_TEMPLATE
-    # templated_convs = tokenizer.apply_chat_template(
-    #     convs, tokenize=False, add_generation_prompt=True
-    # )
+    tokenizer.chat_template = CUSTOM_CHAT_TEMPLATE
+    templated_convs = tokenizer.apply_chat_template(
+        convs, tokenize=False, add_generation_prompt=True
+    )
 
     # Duplicate convs to generate config.n completions per prompt so we can do continous batching
     # This makes [p1, p2, p3, p4] become [p1, p1, p2, p2, p3, p3, p4, p4] for e.g. config.n=2
-    # templated_convs = [c for conv in templated_convs for c in [conv] * args.n]
+    templated_convs = [c for conv in templated_convs for c in [conv] * args.n]
 
     # Initialize empty lists for completions and completion tokens
     completions = [[] for _ in range(len(x["problem"]))]
-    completion_tokens = [[] for _ in range(len(x["problem"]))]
 
     sampling_params = SamplingParams(
         temperature=0.8,
@@ -308,34 +281,11 @@ def main(args):
         n=1,  # Since we've already duplicated the prompt_token_ids, we only need to generate 1 completion per prompt
     )
 
-    # responses = llm.generate(
-    #     templated_convs,
-    #     sampling_params=sampling_params,
-    #     use_tqdm=False,
-    # )
-    # Create simple dummy responses
-    class DummyOutput:
-        def __init__(self, text):
-            self.text = text
-            
-    class DummyResponse:
-        def __init__(self, text):
-            self.outputs = [DummyOutput(text)]
-            
-    responses = []
-    for i in range(len(x["problem"])):
-        for j in range(args.n):
-            if i == 0:
-                # Responses for "What is the sum of 1 and 2?"
-                if j == 0:
-                    # Add a deliberately bad response 
-                    responses.append(DummyResponse("Step 1: First, I'll count from 1 to 2 on my fingers. I see that I'm using 2 fingers, so that's good.\nStep 2: Now I'll add them together\nIf I count all my raised fingers, I get 4.\n Therefore, 1 + 2 = 4"))
-                else:
-                    responses.append(DummyResponse("Step 1: To add 1 and 2, I'll start with 1. I have 1 as my base number.\nStep 2: Then add 2 to it\nAdding 2 to 1 gives us 3.\n Therefore, 1 + 2 = 3"))
-            else:
-                # Responses for "What is the product of 3 and 4?"
-                responses.append(DummyResponse("Step 1: To multiply 3 and 4, I'll write out 3 four times. 3 + 3 + 3 + 3\nStep 2: Now add these numbers. 3 + 3 + 3 + 3 = 12.\n Therefore, 3 × 4 = 12"))
-
+    responses = llm.generate(
+        templated_convs,
+        sampling_params=sampling_params,
+        use_tqdm=False,
+    )
 
     if len(responses) != len(x["problem"]) * args.n:
         raise ValueError(
@@ -348,11 +298,6 @@ def main(args):
             for r in responses[i * args.n : (i + 1) * args.n]
             for output in r.outputs
         ]
-        # completion_tokens[i] = [
-        #     len(output.token_ids)
-        #     for r in responses[i * args.n : (i + 1) * args.n]
-        #     for output in r.outputs
-        # ]
 
     # Check we generated the correct number of completions for each prompt
     for c in completions:
@@ -360,42 +305,36 @@ def main(args):
             raise ValueError(f"Generated {len(c)} completions instead of {args.n}")
 
     # completions is now a List[List[str]] of size NUM_PROMPTS [N]
-
     prm_model = AutoModelForTokenClassification.from_pretrained(args.prm_model)
     tokenizer = AutoTokenizer.from_pretrained(args.prm_model)
 
     prm_model.eval()
 
     scores = score(prm_model, x["problem"], completions, args.separator, tokenizer)
-    # print("scores", scores, scores.shape)
 
     agg_scores = [[aggregate_scores(s, "prod") for s in score] for score in scores]
 
     # Select the completion with the highest score
     pred = [completion[np.argmax(s)] for completion, s in zip(completions, agg_scores)]
-
-    print("pred", pred)
-    # x["completions"] = completions
-    # x["scores"] = scores
-    # x["pred"] = pred
-    # x["completion_tokens"] = completion_tokens
-
-    # return x
+    for i in range(len(x["problem"])):
+        print("="*80)
+        print("Problem: ", x["problem"][i])
+        print("Predicted answer (BoN): ", pred[i])
+        print("Answer: ", answers[i])
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--base_model", type=str)
     parser.add_argument("--prm_model", type=str)
-    # parser.add_argument("--batch_size", type=int, default=24)
-    parser.add_argument("--num_gpus", type=int, default=4)
+    parser.add_argument("--num_gpus", type=int, default=2)
     parser.add_argument(
         "--separator",
         type=str,
         default="\n\n",
         help="It's important to use the same separator as the one used during TRL training",
     )
-    parser.add_argument("--n", type=int, default=2)
+    parser.add_argument("--n", type=int, default=8)
 
     args = parser.parse_args()
 

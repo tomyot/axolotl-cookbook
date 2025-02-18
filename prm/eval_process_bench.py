@@ -1,4 +1,5 @@
-# torchrun --nproc_per_node=4 eval_ProcessBench.py --model <model_path> -b 24 -w 4 -s "\n"
+# credit to the GitHub user @CJReinforce
+# https://github.com/QwenLM/ProcessBench/pull/12
 import argparse
 import json
 import os

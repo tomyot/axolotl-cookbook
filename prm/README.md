@@ -5,12 +5,35 @@ This cookbook accompanies our [Training Process Reward Models in axolotl](<blogp
 ### ProcessBench
 
 ```bash
-torchrun --nproc_per_node=4 eval_ProcessBench.py --model <model_path> -b 24 -w 4 -s "\n"
+torchrun --nproc_per_node=4 eval_process_bench.py --model <model_path> -b 24 -w 4 -s "\n"
+
+GSM8K:
+err   corr   F1
+----- ------ ----
+55.5   98.4  71.0
+
+MATH:
+err   corr   F1
+----- ------ ----
+49.8   91.9  64.6
+
+OlympiadBench:
+err   corr   F1
+----- ------ ----
+31.2   87.3  46.0
+
+Omni-MATH:  
+err   corr   F1
+----- ------ ----
+30.2   62.7  40.7
+
+Average F1 across datasets: 47.8
 ```
 
 ### Best of N
 
 ```bash
-python bon.py --base_model <model_path> --prm_model <model_path> --num_gpus 2 --n 8
+python bon.py --base_model Qwen/Qwen2.5-1.5B-Instruct  --prm_model axolotl-ai-co/Qwen2.5-Math-PRM-7B --n 16
 ```
 
+Example outputs can be seen in `bon_qwen1.5B-instruct_n=16_results.txt`, and `bon_qwen1.5B-instruct_n=1_results.txt`, for `n=16` and `n=1` respectively.

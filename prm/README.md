@@ -1,6 +1,6 @@
 # Process Reward Modelling with axolotl
 
-This cookbook accompanies our [Training Process Reward Models in axolotl](<blogpost_link) blog-post, and provides details on reproducing the evaluation results for [axolotl-ai-co/Qwen2.5-Math-PRM-7B](https://huggingface.co/axolotl-ai-co/Qwen2.5-Math-PRM-7B)/
+This cookbook accompanies our [Training Process Reward Models in axolotl](https://axolotlai.substack.com/p/process-reward-models) blog-post, and provides details on reproducing the evaluation results for [axolotl-ai-co/Qwen2.5-Math-PRM-7B](https://huggingface.co/axolotl-ai-co/Qwen2.5-Math-PRM-7B)/
 
 ### ProcessBench
 
